@@ -1,0 +1,85 @@
+<!doctype html>
+<head>
+<meta charset="UTF-8">
+<title>{% block title %}{% endblock %} - TuneTopia</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+<script src="https://sdk.scdn.co/spotify-player.js"></script>
+<script>
+  function showReplyForm(commentId) {
+      var replyForm = document.getElementById('reply-form-' + commentId);
+      if (replyForm.style.display === 'none') {
+          replyForm.style.display = 'block';
+      } else {
+          replyForm.style.display = 'none';
+      }
+  }
+</script>
+</head>
+<nav class="navbar">
+  <div class="container">
+    <div class="logo">
+      <h1><a href="{{ url_for('blog.index') }}">TuneTopia</a></h1>
+    </div>
+    <div class="main-menu">
+      {% if g.user %}
+      <ul>
+        <li>
+          <a href="{{url_for('profile.profile_base', id=g.user['id'])}}">Profile</a>
+        </li>
+          <a href="{{url_for('profile.profile_base', id=g.user['id'])}}">
+            <li>
+              <img src={{ g.user['profile_pic_url'] }} class="profile_pic">
+            </li>
+          </a>
+        <li>
+          <a href="{{ url_for('auth.logout') }}">Log Out</a>
+        </li>
+      </ul>
+    {% else %}
+    <ul>
+      <li>
+        <a>About</a>
+      </li>
+      <li>
+        <a href="{{ url_for('auth.login_spotify') }}">Login with Spotify</a>
+      </li>
+    </ul>
+    {% endif %}
+</nav>
+<section class="content">
+  <div class="container1">
+  <header>
+    {% block header %}{% endblock %}
+  </header>
+  {%if not g.user%}
+  <li>
+    <h1>For music lovers. By music lovers.</h1>
+  </li>
+  <li>
+    <a>Want to share your superior music taste with the world or find new songs to add to your playlists? Join TuneTopia today!</a>
+  </li>
+  </div>
+  <div class="container2">
+    <h3>How it works:</h3>
+    <ul>
+      <li>
+        <a>1. Connect your spotify account</a>
+      </li>
+      <li>
+        <a>2. Share your favorite songs/albums through posts</a>
+      </li>
+      <li>
+        <a>3. Follow other users!</a>
+      </li>
+    </ul>
+    </div>
+  {% endif %}
+  {% for message in get_flashed_messages() %}
+    <div class="flash">{{ message }}</div>
+  {% endfor %}
+  {% block content %}{% endblock %}
+</section>

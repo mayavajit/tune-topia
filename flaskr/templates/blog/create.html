@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}New Post{% endblock %}</h1>
+  <script>
+    function save_track_info(uri, track_name, track_artist, link, image_url, post_id) {
+      fetch('/save-track-info', {
+        method: 'POST',
+        headers: {
+          'Content-Type' : 'application/json'
+        },
+        body: JSON.stringify({
+          'song_uri': uri,
+          'track_name' : track_name,
+          'track_artist': track_artist,
+          'link': link,
+          'image_url': image_url,
+          'post_id': post_id
+        })
+      }).then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            alert('Track info saved successfully!');
+        } else {
+            alert('Failed to save song URI.');
+        }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+
+  function playSong(uri) {
+
+  }
+
+  function SearchSongs(query, post_id) {
+    if (query.length < 2) {
+      document.getElementById('search-results').innerHTML = '';
+      return;
+    }
+    fetch('/search-songs?query=' + encodeURIComponent(query))
+    .then(response => response.json())
+    .then(data => {
+      let results = document.getElementById('search-results');
+      results.innerHTML = '';
+
+      data.tracks.forEach(track => {
+        let resultItem = document.createElement('div');
+        resultItem.innerHTML += `<img src=${track.image_url}>`;
+        resultItem.innerHTML += `<a>${track.track_name}</a>`;
+        resultItem.innerHTML += `<a>${track.track_artist}</a>`;
+        resultItem.innerHTML += `<button id="choose-song-btn" onclick="save_track_info('${track.uri}','${track.track_name}' , '${track.track_artist}', '${track.link}', '${track.image_url}', {{post_id}})">Add</button>`;
+        results.appendChild(resultItem);
+      });
+    })
+    .catch(error => {
+            console.error('Error:', error);
+     });
+  }
+  </script>
+{% endblock %}
+
+{% block content %}
+  <form method="post">
+    <label for="title">Title</label>
+    <input name="title" id="title" value="{{ request.form['title'] }}" required>
+    <label for="body">Body</label>
+    <textarea name="body" id="body">{{ request.form['body'] }}</textarea>
+      <div class="text-center">
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </div>
+  </form>
+  <div class="search-box">
+    <input type="text" placeholder="Search for a song..." name="song-name" onkeyup="SearchSongs(this.value, {{post_id}})">
+    </div>
+  <div class="song-choices" id="search-results">
+  </div>
+{% endblock %}

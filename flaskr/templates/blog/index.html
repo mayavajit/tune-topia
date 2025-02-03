@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+<head>
+  <script src="https://sdk.scdn.co/spotify-player.js"></script>
+</head>
+
+{% block header %}
+  {% if g.user %}
+  <div class="container-posts">
+  <h1>{% block title %}Posts{% endblock %}</h1>
+  <a class="action" href="{{ url_for('blog.create') }}">New</a>
+  </div>
+  <hr>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<script>
+  let player;
+  window.onSpotifyWebPlaybackSDKReady = () => {
+            const token = '{{ access_token }}';
+            const player = new Spotify.Player({
+                name: 'Web Playback SDK Player',
+                getOAuthToken: cb => { cb(token); },
+                volume: 0.5
+            });
+
+            // Error handling
+            player.addListener('initialization_error', ({ message }) => { console.error(message); });
+            player.addListener('authentication_error', ({ message }) => { console.error(message); });
+            player.addListener('account_error', ({ message }) => { console.error(message); });
+            player.addListener('playback_error', ({ message }) => { console.error(message); });
+
+            // Playback status updates
+            player.addListener('player_state_changed', state => { console.log(state); });
+
+            // Ready
+            player.addListener('ready', ({ device_id }) => {
+                console.log('Ready with Device ID', device_id);
+            });
+            player.connect();
+          };
+
+          function playTrack(song_uri) {
+            fetch(`https://api.spotify.com/v1/me/player/play`, {
+      method: 'PUT',
+      body: JSON.stringify({ uris: [song_uri] }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer {{ access_token }}` // Replace with your OAuth token
+      },
+    }).then(response => {
+      if (!response.ok) {
+        alert('Error: Could not play track. Make sure you have a Spotify Premium account and the token is valid.');
+      }
+    });
+          }
+
+          function pauseTrack() {
+            fetch(`https://api.spotify.com/v1/me/player/pause`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer {{ access_token }}` // Replace with your OAuth token
+      },
+    }).then(response => {
+      if (!response.ok) {
+        alert('Error: Could not pause track. Make sure you have a Spotify Premium account and the token is valid.');
+      }
+    });
+  }
+</script>
+  {% for post in posts %}
+    <article class="post">
+      <header>
+        <div>
+          <h1><a href="{{ url_for('blog.show_post', id=post['id']) }}">{{ post['title'] }}</a></h1>
+          <div class="about">by {{ post['username'] }} on {{ post['created'].strftime('%Y-%m-%d') }}</div>
+        </div>
+        {% if g.user['id'] == post['author_id'] %}
+          <a class="action" href="{{ url_for('blog.update', id=post['id']) }}">Edit</a>
+        {% endif %}
+      </header>
+      <p class="body">{{ post['body'] }}</p>
+      <div class="music-player" id="player-{{post['id']}}">
+        <button onclick="playTrack('{{ post['song_uri'] }}')">Play</button>
+        <button onclick="pauseTrack()">Pause</button>
+      </div>
+      <form action="{{ url_for('blog.like_post', id=post['id']) }}" method="POST" style="display:inline;">
+        <button type="submit" style="background:none; border:none; cursor:pointer;">
+            <i class="fas fa-heart"></i>
+        </button>
+        <p style="display:inline;">{{ post.likes }}</p>
+    </form>
+    </article>
+    {% if not loop.last %}
+      <hr>
+    {% endif %}
+  {% endfor %}
+{% endblock %}

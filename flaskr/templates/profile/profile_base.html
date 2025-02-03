@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block content %}
+<script>
+    // When the user clicks on <div>, open the popup
+    function myFunction(popupid) {
+      var popup = document.getElementById(popupid);
+      popup.classList.toggle("show");
+    }
+
+    function getGenreBreakdown() {
+        fetch('/profile/get_genres')
+            .then(response => {
+                if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+            }) 
+            .then(data => {
+                console.log(data)
+                var image = document.getElementById('genre-image');
+                image.src = "{{ url_for('static', filename='images/genre-plot.png')}}";
+                button = document.getElementById('genre-button');
+                button.style.visibility = "hidden";
+            }) 
+            .catch(error => console.error(error));
+    }
+</script>
+<body>
+    <div class="container-bio">
+        <div class="pic">
+            <img src="{{ g.user['profile_pic_url'] }}" class="profile_pic_page">
+        </div>
+        <div class="info">
+            <a>{{ g.user['username'] }}</a>
+            <div class="follow-counts">
+                <div class="followers-popup" onclick="myFunction('followerPopup')">{{ follower_count }} Followers
+                    <div class="popuptext" id="followerPopup">
+                        <ul>
+                            {% for follower in followers %}
+                                <li>
+                                    <img src="{{ follower['follower_profile_pic']}}" class="follower_pfp">
+                                </li>
+                                <li>
+                                    <a>{{follower['follower_username']}}</a>
+                                </li>
+                                {% endfor %}
+                        </ul>
+                    </div>
+                  </div>
+                  <div class="following-popup" onclick="myFunction('followingPopup')">{{ following_count }} Following
+                    <div class="popuptext" id="followingPopup">
+                            {% for follow in following %}
+                                <div class="follow-person">
+                                    <li>
+                                        <img src="{{ follow['following_profile_pic']}}" class="follower_pfp">
+                                    </li>
+                                    <li>
+                                        <a>{{follow['following_username']}}</a>
+                                    </li>
+                                </div>
+                            {% endfor %}
+                    </div>
+                </div>
+                </div>
+                <div class="currently-playing">
+                        <a href = "{{ link }}">Currently playing: {{ current_track['track_name'] }} - {{ current_track['track_artist'] }}</a>
+                </div>
+            </div>
+    </div>
+<div class="stats">
+    <div class="top_tracks">
+        <h1>Top Tracks:</h1>
+        {% for track in top_tracks %}
+        <li>
+            <a href = "{{track['link'] }}"> - {{track['track_name']}} - {{track['track_artist']}}</a>
+        </li>
+        {% endfor %}
+    </div>
+    <div class="top_artists">
+        <h1>Top Artists:</h1>
+        {% for artist in top_artists %}
+        <li>
+            <a class="artist" href = "{{artist['link'] }}">
+                <img class="top-artist-pfp" src="{{artist['image_url']}}">
+                <a>{{artist['artist_name']}}</a>
+            </a>
+        </li>
+        {% endfor %}
+    </div>
+    <div class="genre-breakdown">
+        <button id="genre-button" onclick="getGenreBreakdown()">Click here to get your top genres</button>
+        <img id="genre-image" src="">
+    </div>
+</div>
+</body>
+{% endblock %}
